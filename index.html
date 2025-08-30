@@ -1,0 +1,1633 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Quản Lý Hiệu Suất Doanh Nghiệp</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #3b82f6;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #06b6d4;
+            --light-bg: #f8fafc;
+            --white: #ffffff;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-bg);
+            color: var(--gray-800);
+            line-height: 1.6;
+        }
+
+        /* Dark mode */
+        body.dark-mode {
+            --light-bg: #0b1220;
+            --white: #0f172a;
+            --gray-50: #0b1220;
+            --gray-100: #0b1526;
+            --gray-200: #1e293b;
+            --gray-300: #334155;
+            --gray-400: #475569;
+            --gray-500: #64748b;
+            --gray-600: #8a98ad;
+            --gray-700: #c7d2fe;
+            --gray-800: #e5e7eb;
+            --gray-900: #f8fafc;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem 1rem;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)" /></svg>');
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo i {
+            font-size: 2rem;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem;
+            border-radius: 12px;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .nav-menu {
+            list-style: none;
+            position: relative;
+            z-index: 1;
+        }
+
+        .nav-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .nav-link i {
+            font-size: 1.2rem;
+            width: 24px;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            background: var(--white);
+            padding: 1.5rem 2rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .header-left h2 {
+            color: var(--gray-800);
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .period-selector {
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            background: var(--white);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .period-selector:hover {
+            border-color: var(--primary-color);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--gray-600);
+            border: 2px solid var(--gray-200);
+        }
+
+        .btn-outline:hover {
+            background: var(--gray-50);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .kpi-icon {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .kpi-trend {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .trend-up {
+            color: var(--success-color);
+        }
+
+        .trend-down {
+            color: var(--danger-color);
+        }
+
+        .kpi-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--gray-800);
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-label {
+            color: var(--gray-600);
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        /* Charts Section */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            position: relative;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--gray-800);
+        }
+
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+
+        /* Table */
+        .data-table-section {
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 1.5rem 2rem;
+            background: var(--gray-50);
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--gray-800);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 1rem 2rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .data-table th {
+            background: var(--gray-50);
+            font-weight: 600;
+            color: var(--gray-700);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table tr:hover {
+            background: var(--gray-50);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-inactive {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+
+        /* Settings section */
+        .settings-section {
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            padding: 2rem;
+            display: none;
+            gap: 1.5rem;
+        }
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.5rem;
+        }
+        .setting-card {
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+        }
+        .setting-card h4 {
+            margin-bottom: 0.5rem;
+            color: var(--gray-700);
+        }
+        .muted {
+            color: var(--gray-500);
+            font-size: 0.9rem;
+        }
+
+        /* Loading overlay for route changes */
+        .route-loader {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.08);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1500;
+            backdrop-filter: blur(2px);
+        }
+        .route-loader .spinner {
+            width: 48px;
+            height: 48px;
+            border: 5px solid rgba(255,255,255,0.6);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+            background: transparent;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .kpi-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Fade in animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            background: var(--success-color);
+            color: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <h1>BusinessPro</h1>
+            </div>
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active" data-tab="overview">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Tổng quan</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-tab="sales">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Bán hàng</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-tab="customers">
+                            <i class="fas fa-users"></i>
+                            <span>Khách hàng</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-tab="products">
+                            <i class="fas fa-box"></i>
+                            <span>Sản phẩm</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-tab="finance">
+                            <i class="fas fa-dollar-sign"></i>
+                            <span>Tài chính</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-tab="reports">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Báo cáo</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-tab="departments">
+                            <i class="fas fa-building"></i>
+                            <span>Phòng ban</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-tab="settings">
+                            <i class="fas fa-cog"></i>
+                            <span>Cài đặt</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h2>Dashboard Tổng quan</h2>
+                    <p>Chào mừng trở lại! Dưới đây là tóm tắt hiệu suất kinh doanh của bạn.</p>
+                </div>
+                <div class="header-right">
+                    <select class="period-selector" id="periodSelector">
+                        <option value="today">Hôm nay</option>
+                        <option value="week">7 ngày qua</option>
+                        <option value="month" selected>30 ngày qua</option>
+                        <option value="quarter">Quý này</option>
+                        <option value="year">Năm nay</option>
+                    </select>
+                    <button class="btn btn-outline" id="exportBtn">
+                        <i class="fas fa-download"></i>
+                        Xuất báo cáo
+                    </button>
+                    <button class="btn btn-primary" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i>
+                        Làm mới
+                    </button>
+                </div>
+            </header>
+
+            <!-- KPI Cards -->
+            <section class="kpi-grid" id="kpiGrid">
+                <div class="kpi-card fade-in">
+                    <div class="kpi-header">
+                        <div class="kpi-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="kpi-trend trend-up">
+                            <i class="fas fa-arrow-up"></i>
+                            <span id="revenueTrend">+12.5%</span>
+                        </div>
+                    </div>
+                    <div class="kpi-value" id="revenueValue">2.450.000 ₫</div>
+                    <div class="kpi-label" id="kpi1Label">Doanh thu tháng này</div>
+                </div>
+
+                <div class="kpi-card fade-in">
+                    <div class="kpi-header">
+                        <div class="kpi-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="kpi-trend trend-up">
+                            <i class="fas fa-arrow-up"></i>
+                            <span id="customersTrend">+8.3%</span>
+                        </div>
+                    </div>
+                    <div class="kpi-value" id="customersValue">1,205</div>
+                    <div class="kpi-label" id="kpi2Label">Khách hàng mới</div>
+                </div>
+
+                <div class="kpi-card fade-in">
+                    <div class="kpi-header">
+                        <div class="kpi-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="kpi-trend trend-down">
+                            <i class="fas fa-arrow-down"></i>
+                            <span id="ordersTrend">-2.1%</span>
+                        </div>
+                    </div>
+                    <div class="kpi-value" id="ordersValue">856</div>
+                    <div class="kpi-label" id="kpi3Label">Đơn hàng</div>
+                </div>
+
+                <div class="kpi-card fade-in">
+                    <div class="kpi-header">
+                        <div class="kpi-icon">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="kpi-trend trend-up">
+                            <i class="fas fa-arrow-up"></i>
+                            <span id="conversionTrend">+0.5%</span>
+                        </div>
+                    </div>
+                    <div class="kpi-value" id="conversionValue">3.2%</div>
+                    <div class="kpi-label" id="kpi4Label">Tỷ lệ chuyển đổi</div>
+                </div>
+            </section>
+
+            <!-- Charts -->
+            <section class="charts-grid" id="chartsGrid">
+                <div class="chart-card fade-in">
+                    <div class="chart-header">
+                        <h3 class="chart-title" id="chart1Title">Doanh thu & Lợi nhuận</h3>
+                        <div class="chart-controls">
+                            <button class="btn btn-outline" id="chartTypeBtn">
+                                <i class="fas fa-chart-line"></i>
+                                Line Chart
+                            </button>
+                            <button class="btn btn-outline" id="downloadChart1Btn">
+                                <i class="fas fa-image"></i>
+                                Tải ảnh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card fade-in">
+                    <div class="chart-header">
+                        <h3 class="chart-title" id="chart2Title">Kênh bán hàng</h3>
+                        <div class="chart-controls">
+                            <button class="btn btn-outline" id="downloadChart2Btn">
+                                <i class="fas fa-image"></i>
+                                Tải ảnh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="salesChannelChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Data Table -->
+            <section class="data-table-section fade-in" id="tableSection">
+                <div class="table-header">
+                    <h3 class="table-title" id="tableTitle">Sản phẩm bán chạy nhất</h3>
+                    <div class="table-actions">
+                        <input id="searchInput" placeholder="Tìm kiếm sản phẩm..." class="period-selector" style="min-width: 220px;" />
+                        <button class="btn btn-outline">
+                            <i class="fas fa-filter"></i>
+                            Lọc
+                        </button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table class="data-table" id="productsTable">
+                        <thead>
+                            <tr id="tableHeaderRow">
+                                <th>Sản phẩm</th>
+                                <th>Danh mục</th>
+                                <th>Đã bán</th>
+                                <th>Doanh thu</th>
+                                <th>Tỷ lệ</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section class="settings-section" id="settingsSection">
+                <h3 class="chart-title" style="margin-bottom: 1rem;">Cài đặt hệ thống</h3>
+                <div class="settings-grid">
+                    <div class="setting-card">
+                        <h4>Tab mặc định</h4>
+                        <p class="muted">Chọn mục mở khi vào Dashboard</p>
+                        <select class="period-selector" id="settingDefaultTab">
+                            <option value="overview">Tổng quan</option>
+                            <option value="sales">Bán hàng</option>
+                            <option value="customers">Khách hàng</option>
+                            <option value="products">Sản phẩm</option>
+                            <option value="finance">Tài chính</option>
+                        </select>
+                    </div>
+                    <div class="setting-card">
+                        <h4>Kỳ mặc định</h4>
+                        <p class="muted">Áp dụng cho KPI và biểu đồ</p>
+                        <select class="period-selector" id="settingDefaultPeriod">
+                            <option value="today">Hôm nay</option>
+                            <option value="week">7 ngày qua</option>
+                            <option value="month">30 ngày qua</option>
+                            <option value="quarter">Quý này</option>
+                            <option value="year">Năm nay</option>
+                        </select>
+                    </div>
+                    <div class="setting-card">
+                        <h4>Kiểu biểu đồ mặc định</h4>
+                        <p class="muted">Biểu đồ chính (Line/Bar)</p>
+                        <select class="period-selector" id="settingDefaultChartType">
+                            <option value="line">Line</option>
+                            <option value="bar">Bar</option>
+                        </select>
+                    </div>
+                    <div class="setting-card">
+                        <h4>Cập nhật thời gian thực</h4>
+                        <p class="muted">Tự động làm mới mỗi 30 giây</p>
+                        <label style="display:flex;align-items:center;gap:0.5rem;">
+                            <input type="checkbox" id="settingRealtime" /> Bật
+                        </label>
+                    </div>
+                </div>
+                <div style="margin-top:1.5rem;display:flex;gap:0.75rem;">
+                    <button class="btn btn-primary" id="settingsSaveBtn"><i class="fas fa-save"></i> Lưu cài đặt</button>
+                    <button class="btn btn-outline" id="settingsResetBtn"><i class="fas fa-undo"></i> Khôi phục mặc định</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <span id="notificationText">Đã làm mới dữ liệu thành công!</span>
+    </div>
+
+    <!-- Route Loader -->
+    <div class="route-loader" id="routeLoader"><div class="spinner"></div></div>
+
+    <script>
+        // Global state
+        let currentTab = 'overview';
+        let currentPeriod = 'month';
+        let defaultChartType = 'line';
+        let realtimeEnabled = true;
+        let realtimeIntervalId = null;
+
+        // Settings persistence
+        const SETTINGS_KEY = 'bp_settings';
+        function loadSettings() {
+            try { return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}; } catch { return {}; }
+        }
+        function saveSettings(obj) {
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(obj));
+        }
+        function getDefaultSettings() {
+            return { defaultTab: 'overview', defaultPeriod: 'month', defaultChartType: 'line', realtime: true };
+        }
+        function applySettingsToState() {
+            const s = { ...getDefaultSettings(), ...loadSettings() };
+            currentTab = s.defaultTab;
+            currentPeriod = s.defaultPeriod;
+            defaultChartType = s.defaultChartType;
+            realtimeEnabled = !!s.realtime;
+        }
+        function syncSettingsUI() {
+            const s = { defaultTab: currentTab, defaultPeriod: currentPeriod, defaultChartType: defaultChartType, realtime: realtimeEnabled };
+            const tabSel = document.getElementById('settingDefaultTab');
+            const perSel = document.getElementById('settingDefaultPeriod');
+            const chartSel = document.getElementById('settingDefaultChartType');
+            const realtimeCb = document.getElementById('settingRealtime');
+            if (tabSel) tabSel.value = s.defaultTab;
+            if (perSel) perSel.value = s.defaultPeriod;
+            if (chartSel) chartSel.value = s.defaultChartType;
+            if (realtimeCb) realtimeCb.checked = s.realtime;
+        }
+        function wireSettingsActions() {
+            const saveBtn = document.getElementById('settingsSaveBtn');
+            const resetBtn = document.getElementById('settingsResetBtn');
+            if (saveBtn) saveBtn.addEventListener('click', () => {
+                const tabSel = document.getElementById('settingDefaultTab');
+                const perSel = document.getElementById('settingDefaultPeriod');
+                const chartSel = document.getElementById('settingDefaultChartType');
+                const realtimeCb = document.getElementById('settingRealtime');
+                const payload = {
+                    defaultTab: tabSel ? tabSel.value : currentTab,
+                    defaultPeriod: perSel ? perSel.value : currentPeriod,
+                    defaultChartType: chartSel ? chartSel.value : defaultChartType,
+                    realtime: realtimeCb ? realtimeCb.checked : realtimeEnabled
+                };
+                saveSettings(payload);
+                applySettingsToState();
+                // reflect to UI
+                const periodSelector = document.getElementById('periodSelector');
+                if (periodSelector) periodSelector.value = currentPeriod;
+                const navLinks = document.querySelectorAll('.nav-link');
+                navLinks.forEach(l => l.classList.remove('active'));
+                const active = Array.from(navLinks).find(l => l.getAttribute('data-tab') === currentTab);
+                if (active) active.classList.add('active');
+                renderForState();
+                showNotification('Đã lưu cài đặt.');
+            });
+            if (resetBtn) resetBtn.addEventListener('click', () => {
+                const def = getDefaultSettings();
+                saveSettings(def);
+                applySettingsToState();
+                syncSettingsUI();
+                const periodSelector = document.getElementById('periodSelector');
+                if (periodSelector) periodSelector.value = currentPeriod;
+                showNotification('Đã khôi phục mặc định.');
+            });
+        }
+
+        // Utility: theme-aware chart colors
+        function getThemeColors() {
+            const styles = getComputedStyle(document.body);
+            const grid = styles.getPropertyValue('--gray-200').trim();
+            const tick = styles.getPropertyValue('--gray-600').trim();
+            const bg = styles.getPropertyValue('--white').trim();
+            return { gridColor: grid || '#e2e8f0', tickColor: tick || '#475569', background: bg || '#ffffff' };
+        }
+
+        // Sample base data for variants per tab with 12 months
+        const baseData = {
+            months: ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'],
+            overview: {
+                kpis: {
+                    k1: { key: 'revenue', label: 'Doanh thu', value: 2450000, trend: 12.5, unit: 'currency' },
+                    k2: { key: 'customers', label: 'Khách hàng mới', value: 1205, trend: 8.3, unit: 'number' },
+                    k3: { key: 'orders', label: 'Đơn hàng', value: 856, trend: -2.1, unit: 'number' },
+                    k4: { key: 'conversion', label: 'Tỷ lệ chuyển đổi', value: 3.2, trend: 0.5, unit: 'percent' }
+                },
+                chart1: {
+                    title: 'Doanh thu & Lợi nhuận', type: 'line',
+                    datasets: [
+                        { label: 'Doanh thu', data: [2100000,2300000,2450000,2200000,2650000,2800000,2750000,2900000,3000000,3200000,3150000,3350000], color: '#3b82f6' },
+                        { label: 'Lợi nhuận', data: [420000,460000,490000,440000,530000,560000,550000,580000,600000,640000,630000,670000], color: '#10b981' }
+                    ]
+                },
+                chart2: {
+                    title: 'Kênh bán hàng', type: 'doughnut',
+                    labels: ['Website','Mobile App','Cửa hàng','Social Media'],
+                    data: [45,30,15,10], colors: ['#3b82f6','#10b981','#f59e0b','#ef4444']
+                },
+                table: {
+                    title: 'Sản phẩm bán chạy nhất',
+                    columns: ['Sản phẩm','Danh mục','Đã bán','Doanh thu','Tỷ lệ','Trạng thái'],
+                    rows: [
+                        { name: 'iPhone 15 Pro', category: 'Điện thoại', sold: 156, revenue: 390000000, rate: 23.5, status: 'active' },
+                        { name: 'MacBook Air M2', category: 'Laptop', sold: 89, revenue: 267000000, rate: 18.2, status: 'active' },
+                        { name: 'AirPods Pro', category: 'Phụ kiện', sold: 234, revenue: 140400000, rate: 15.8, status: 'active' },
+                        { name: 'iPad Air', category: 'Tablet', sold: 67, revenue: 100500000, rate: 12.1, status: 'pending' },
+                        { name: 'Apple Watch', category: 'Smartwatch', sold: 123, revenue: 98400000, rate: 10.4, status: 'active' },
+                        { name: 'Magic Keyboard', category: 'Phụ kiện', sold: 88, revenue: 52800000, rate: 6.9, status: 'active' },
+                        { name: 'iMac 24"', category: 'Desktop', sold: 25, revenue: 85000000, rate: 4.1, status: 'inactive' }
+                    ]
+                }
+            },
+            sales: {
+                kpis: {
+                    k1: { key: 'orders', label: 'Đơn hàng', value: 856, trend: 4.2, unit: 'number' },
+                    k2: { key: 'aov', label: 'Giá trị đơn hàng TB', value: 1450000, trend: 1.5, unit: 'currency' },
+                    k3: { key: 'returns', label: 'Trả hàng', value: 12, trend: -0.3, unit: 'number' },
+                    k4: { key: 'winrate', label: 'Tỷ lệ chốt đơn', value: 21.4, trend: 0.8, unit: 'percent' }
+                },
+                chart1: {
+                    title: 'Đơn hàng & AOV', type: 'bar',
+                    datasets: [
+                        { label: 'Đơn hàng', data: [120,140,150,110,180,156,165,172,190,210,205,220], color: '#3b82f6' },
+                        { label: 'AOV (VND)', data: [1200000,1300000,1350000,1250000,1500000,1450000,1420000,1480000,1510000,1550000,1530000,1580000], color: '#f59e0b', yAxisID: 'y1' }
+                    ], dualAxis: true
+                },
+                chart2: {
+                    title: 'Kênh đơn hàng', type: 'doughnut',
+                    labels: ['Website','App','Cửa hàng','Social'], data: [50,28,12,10], colors: ['#3b82f6','#10b981','#f59e0b','#ef4444']
+                },
+                table: {
+                    title: 'Top nhân viên bán hàng',
+                    columns: ['Nhân viên','Khu vực','Đơn hàng','Doanh thu','Tỷ lệ chốt','Trạng thái'],
+                    rows: [
+                        { name: 'Nguyễn An', category: 'KV Bắc', sold: 210, revenue: 315000000, rate: 28.4, status: 'active' },
+                        { name: 'Trần Bình', category: 'KV Trung', sold: 185, revenue: 246500000, rate: 23.1, status: 'active' },
+                        { name: 'Lê Chi', category: 'KV Nam', sold: 198, revenue: 277200000, rate: 25.9, status: 'pending' },
+                        { name: 'Phạm Đức', category: 'KV Bắc', sold: 172, revenue: 215500000, rate: 21.2, status: 'active' },
+                        { name: 'Đỗ Em', category: 'KV Nam', sold: 154, revenue: 189000000, rate: 19.5, status: 'inactive' }
+                    ]
+                }
+            },
+            customers: {
+                kpis: {
+                    k1: { key: 'newCustomers', label: 'Khách mới', value: 1205, trend: 6.8, unit: 'number' },
+                    k2: { key: 'activeCustomers', label: 'Khách hoạt động', value: 4820, trend: 2.4, unit: 'number' },
+                    k3: { key: 'churn', label: 'Rời bỏ', value: 2.8, trend: -0.2, unit: 'percent' },
+                    k4: { key: 'clv', label: 'CLV (trung bình)', value: 5200000, trend: 1.1, unit: 'currency' }
+                },
+                chart1: {
+                    title: 'Khách mới & Rời bỏ (%)', type: 'line',
+                    datasets: [
+                        { label: 'Khách mới', data: [150,180,220,210,240,205,260,275,290,310,295,320], color: '#10b981' },
+                        { label: 'Rời bỏ (%)', data: [3.2,3.0,2.9,3.1,2.7,2.8,2.6,2.5,2.7,2.4,2.5,2.3], color: '#ef4444', yAxisID: 'y1' }
+                    ], dualAxis: true
+                },
+                chart2: {
+                    title: 'Nhóm khách hàng', type: 'doughnut',
+                    labels: ['Mới','Trung thành','Ngủ đông','Có nguy cơ'], data: [35,40,15,10], colors: ['#3b82f6','#10b981','#94a3b8','#ef4444']
+                },
+                table: {
+                    title: 'Khách hàng gần đây',
+                    columns: ['Tên','Loại','Đơn hàng','Tổng chi','Hạng','Trạng thái'],
+                    rows: [
+                        { name: 'Phạm Dung', category: 'Mới', sold: 3, revenue: 8500000, rate: 0, status: 'active' },
+                        { name: 'Hoàng Giang', category: 'Trung thành', sold: 24, revenue: 125000000, rate: 0, status: 'active' },
+                        { name: 'Vũ Hà', category: 'Có nguy cơ', sold: 8, revenue: 18500000, rate: 0, status: 'pending' },
+                        { name: 'Trịnh Khoa', category: 'Ngủ đông', sold: 1, revenue: 1200000, rate: 0, status: 'inactive' },
+                        { name: 'Mai Lan', category: 'Mới', sold: 2, revenue: 5600000, rate: 0, status: 'active' }
+                    ]
+                }
+            },
+            products: {
+                kpis: {
+                    k1: { key: 'sku', label: 'Số SKU', value: 124, trend: 1.2, unit: 'number' },
+                    k2: { key: 'lowStock', label: 'Sắp hết hàng', value: 9, trend: -0.4, unit: 'number' },
+                    k3: { key: 'outOfStock', label: 'Hết hàng', value: 3, trend: 0.1, unit: 'number' },
+                    k4: { key: 'returnRate', label: 'Tỷ lệ trả hàng', value: 1.4, trend: -0.1, unit: 'percent' }
+                },
+                chart1: {
+                    title: 'Doanh thu theo danh mục', type: 'bar',
+                    datasets: [
+                        { label: 'Điện thoại', data: [35,38,42,33,45,48,44,50,55,60,57,62], color: '#3b82f6' },
+                        { label: 'Laptop', data: [20,22,25,23,28,30,29,32,34,36,35,38], color: '#10b981' },
+                        { label: 'Phụ kiện', data: [15,18,16,14,17,19,18,20,21,22,21,23], color: '#f59e0b' }
+                    ]
+                },
+                chart2: {
+                    title: 'Tình trạng kho', type: 'doughnut',
+                    labels: ['Còn hàng','Sắp hết','Hết hàng'], data: [82,12,6], colors: ['#10b981','#f59e0b','#ef4444']
+                },
+                table: {
+                    title: 'Sản phẩm bán chạy',
+                    columns: ['Sản phẩm','Danh mục','Đã bán','Doanh thu','Tỷ lệ','Trạng thái'],
+                    rows: [
+                        { name: 'iPhone 15 Pro', category: 'Điện thoại', sold: 156, revenue: 390000000, rate: 23.5, status: 'active' },
+                        { name: 'MacBook Air M2', category: 'Laptop', sold: 89, revenue: 267000000, rate: 18.2, status: 'active' },
+                        { name: 'AirPods Pro', category: 'Phụ kiện', sold: 234, revenue: 140400000, rate: 15.8, status: 'active' },
+                        { name: 'iPad Pro 12.9"', category: 'Tablet', sold: 45, revenue: 54000000, rate: 7.2, status: 'pending' }
+                    ]
+                }
+            },
+            finance: {
+                kpis: {
+                    k1: { key: 'revenue', label: 'Doanh thu', value: 2450000, trend: 12.5, unit: 'currency' },
+                    k2: { key: 'expense', label: 'Chi phí', value: 1720000, trend: 5.2, unit: 'currency' },
+                    k3: { key: 'profit', label: 'Lợi nhuận', value: 730000, trend: 7.1, unit: 'currency' },
+                    k4: { key: 'margin', label: 'Biên lợi nhuận', value: 22.9, trend: 0.6, unit: 'percent' }
+                },
+                chart1: {
+                    title: 'Doanh thu - Chi phí - Lợi nhuận', type: 'line',
+                    datasets: [
+                        { label: 'Doanh thu', data: [2100000,2300000,2450000,2200000,2650000,2800000,2750000,2900000,3000000,3200000,3150000,3350000], color: '#3b82f6' },
+                        { label: 'Chi phí', data: [1500000,1600000,1700000,1650000,1800000,1850000,1820000,1900000,1950000,2050000,2020000,2100000], color: '#ef4444' },
+                        { label: 'Lợi nhuận', data: [600000,700000,750000,550000,850000,950000,930000,1000000,1050000,1150000,1130000,1250000], color: '#10b981' }
+                    ]
+                },
+                chart2: {
+                    title: 'Cơ cấu chi phí', type: 'doughnut',
+                    labels: ['Marketing','Nhân sự','Vận hành','Khác'], data: [35,30,25,10], colors: ['#3b82f6','#10b981','#f59e0b','#94a3b8']
+                },
+                table: {
+                    title: 'Giao dịch gần đây',
+                    columns: ['Ngày','Loại','Số tiền','Ghi chú','Trạng thái','Người duyệt'],
+                    rows: [
+                        { name: '2025-06-01', category: 'Thu', sold: 0, revenue: 12500000, rate: 0, status: 'active', note: 'Thanh toán khách hàng A', approver: 'Kế toán' },
+                        { name: '2025-06-03', category: 'Chi', sold: 0, revenue: -3200000, rate: 0, status: 'pending', note: 'Chi phí quảng cáo', approver: 'TP Marketing' },
+                        { name: '2025-06-05', category: 'Chi', sold: 0, revenue: -1800000, rate: 0, status: 'active', note: 'Vận chuyển', approver: 'TP Kho' },
+                        { name: '2025-06-07', category: 'Thu', sold: 0, revenue: 8500000, rate: 0, status: 'active', note: 'Khách hàng B', approver: 'Kế toán' }
+                    ]
+                }
+            }
+        };
+
+        // Helpers
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+        }
+        function formatNumber(num) {
+            return new Intl.NumberFormat('vi-VN').format(num);
+        }
+        function getMultiplier(period) {
+            switch(period) {
+                case 'today': return 0.1;
+                case 'week': return 0.3;
+                case 'month': return 1;
+                case 'quarter': return 3;
+                case 'year': return 12;
+                default: return 1;
+            }
+        }
+
+        // Compute view data for a tab without mutating base
+        function getViewForTab(tab, period) {
+            const src = baseData[tab] || baseData.overview;
+            const multiplier = getMultiplier(period);
+
+            // KPIs
+            const kpis = { ...src.kpis };
+            const k1 = { ...kpis.k1 }, k2 = { ...kpis.k2 }, k3 = { ...kpis.k3 }, k4 = { ...kpis.k4 };
+            const scale = (val, unit) => unit === 'percent' ? val : Math.max(0, Math.round(val * multiplier));
+            k1.value = scale(k1.value, k1.unit);
+            k2.value = scale(k2.value, k2.unit);
+            k3.value = scale(k3.value, k3.unit);
+            k4.value = scale(k4.value, k4.unit);
+
+            // Chart1
+            const chart1 = { title: src.chart1.title, type: src.chart1.type, dualAxis: !!src.chart1.dualAxis };
+            chart1.labels = baseData.months.slice(0, src.chart1.datasets[0].data.length);
+            chart1.datasets = src.chart1.datasets.map(ds => ({
+                label: ds.label,
+                data: ds.data.map(v => ds.label.includes('%') ? v : Math.max(0, Math.round(v * multiplier))),
+                borderColor: ds.color,
+                backgroundColor: (ds.color || '#3b82f6') + '33',
+                yAxisID: ds.yAxisID || 'y',
+                isPercent: (ds.label || '').includes('%')
+            }));
+
+            // Chart2
+            const chart2 = { title: src.chart2.title, type: src.chart2.type };
+            chart2.labels = [...src.chart2.labels];
+            chart2.data = [...src.chart2.data];
+            chart2.colors = [...src.chart2.colors];
+
+            // Table
+            const table = { title: src.table.title, columns: [...src.table.columns] };
+            table.rows = src.table.rows.map(r => ({ ...r }));
+
+            return { kpis: { k1, k2, k3, k4 }, chart1, chart2, table };
+        }
+
+        // Charts
+        let revenueChart, salesChannelChart;
+
+        function initializeCharts() {
+            const revenueCanvas = document.getElementById('revenueChart');
+            if (!revenueCanvas) return;
+            const revenueCtx = revenueCanvas.getContext('2d');
+            revenueChart = new Chart(revenueCtx, {
+                type: 'line',
+                data: { labels: [], datasets: [] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true, padding: 20 } },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => {
+                                    const dsLabel = ctx.dataset.label || '';
+                                    const val = ctx.parsed.y;
+                                    if (dsLabel.includes('%')) return `${dsLabel}: ${val}%`;
+                                    if (dsLabel.includes('AOV') || dsLabel.includes('Doanh thu') || dsLabel.includes('Lợi nhuận') || dsLabel.includes('Chi phí'))
+                                        return `${dsLabel}: ${formatCurrency(val)}`;
+                                    return `${dsLabel}: ${formatNumber(val)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true },
+                        y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false } }
+                    }
+                }
+            });
+
+            const salesCanvas = document.getElementById('salesChannelChart');
+            if (!salesCanvas) return;
+            const salesCtx = salesCanvas.getContext('2d');
+            salesChannelChart = new Chart(salesCtx, {
+                type: 'doughnut',
+                data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderWidth: 0, cutout: '70%' }] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => `${ctx.label}: ${ctx.parsed} %`
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function applyAxisTheme(chart, conf) {
+            const theme = getThemeColors();
+            const hasPercentY1 = (conf.datasets || []).some(ds => ds.yAxisID === 'y1' && ds.isPercent);
+            chart.options.scales.y = {
+                beginAtZero: true,
+                grid: { color: theme.gridColor },
+                ticks: {
+                    color: theme.tickColor,
+                    callback: (v) => conf.datasets.some(d => (d.label || '').includes('Doanh thu') || (d.label || '').includes('Lợi nhuận') || (d.label || '').includes('Chi phí')) ? formatCurrency(v) : formatNumber(v)
+                }
+            };
+            chart.options.scales.y1 = conf.dualAxis ? {
+                beginAtZero: true,
+                position: 'right',
+                grid: { drawOnChartArea: false, color: theme.gridColor },
+                ticks: {
+                    color: theme.tickColor,
+                    callback: (v) => hasPercentY1 ? `${v}%` : formatNumber(v)
+                }
+            } : { display: false };
+        }
+
+        function renderChart1(conf) {
+            if (!revenueChart) return;
+            const chartTitleEl = document.getElementById('chart1Title');
+            if (chartTitleEl) chartTitleEl.textContent = conf.title;
+            // respect default chart type if user set
+            revenueChart.config.type = defaultChartType === 'bar' ? 'bar' : conf.type;
+            revenueChart.data.labels = conf.labels;
+            revenueChart.data.datasets = conf.datasets.map(ds => ({
+                label: ds.label,
+                data: ds.data,
+                borderColor: ds.borderColor,
+                backgroundColor: ds.backgroundColor,
+                borderWidth: 3,
+                fill: revenueChart.config.type === 'line',
+                tension: revenueChart.config.type === 'line' ? 0.4 : 0,
+                yAxisID: ds.yAxisID || 'y'
+            }));
+            applyAxisTheme(revenueChart, conf);
+            revenueChart.update();
+        }
+
+        function renderChart2(conf) {
+            if (!salesChannelChart) return;
+            const chartTitleEl = document.getElementById('chart2Title');
+            if (chartTitleEl) chartTitleEl.textContent = conf.title;
+            salesChannelChart.config.type = conf.type;
+            salesChannelChart.data.labels = conf.labels;
+            salesChannelChart.data.datasets[0].data = conf.data;
+            salesChannelChart.data.datasets[0].backgroundColor = conf.colors;
+            salesChannelChart.update();
+        }
+
+        // KPI rendering
+        function renderKPIValues(kpis) {
+            const map = [
+                { id: 'revenueValue', trendId: 'revenueTrend', item: kpis.k1 },
+                { id: 'customersValue', trendId: 'customersTrend', item: kpis.k2 },
+                { id: 'ordersValue', trendId: 'ordersTrend', item: kpis.k3 },
+                { id: 'conversionValue', trendId: 'conversionTrend', item: kpis.k4 }
+            ];
+            const labelMap = [ 'kpi1Label', 'kpi2Label', 'kpi3Label', 'kpi4Label' ];
+            map.forEach((m, idx) => {
+                const valueEl = document.getElementById(m.id);
+                const trendEl = document.getElementById(m.trendId);
+                const labelEl = document.getElementById(labelMap[idx]);
+                if (labelEl) labelEl.textContent = m.item.label;
+                const formatted = m.item.unit === 'currency' ? formatCurrency(m.item.value)
+                    : m.item.unit === 'percent' ? `${m.item.value}%`
+                    : formatNumber(m.item.value);
+                if (valueEl) valueEl.textContent = formatted;
+                if (trendEl) trendEl.textContent = `${m.item.trend > 0 ? '+' : ''}${m.item.trend}%`;
+            });
+        }
+
+        // Table rendering
+        function renderTable(tableConf) {
+            const titleEl = document.getElementById('tableTitle');
+            if (titleEl) titleEl.textContent = tableConf.title;
+            const headerRow = document.getElementById('tableHeaderRow');
+            if (headerRow) {
+                headerRow.innerHTML = '';
+                tableConf.columns.forEach(c => {
+                    const th = document.createElement('th');
+                    th.textContent = c;
+                    headerRow.appendChild(th);
+                });
+            }
+            const tbody = document.getElementById('productsTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            tableConf.rows.forEach(row => {
+                const tr = document.createElement('tr');
+                const cells = [];
+                if (tableConf.columns[0] === 'Ngày') {
+                    cells.push(`<td><strong>${row.name}</strong></td>`);
+                    cells.push(`<td>${row.category}</td>`);
+                    cells.push(`<td>${formatCurrency(row.revenue)}</td>`);
+                    cells.push(`<td>${row.note || ''}</td>`);
+                    cells.push(`<td><span class="status-badge status-${row.status}">${getStatusText(row.status)}</span></td>`);
+                    cells.push(`<td>${row.approver || ''}</td>`);
+                } else {
+                    cells.push(`<td><strong>${row.name}</strong></td>`);
+                    cells.push(`<td>${row.category}</td>`);
+                    cells.push(`<td>${formatNumber(row.sold)}</td>`);
+                    cells.push(`<td>${formatCurrency(row.revenue)}</td>`);
+                    cells.push(`<td>${row.rate}%</td>`);
+                    cells.push(`<td><span class="status-badge status-${row.status}">${getStatusText(row.status)}</span></td>`);
+                }
+                tr.innerHTML = cells.join('');
+                tbody.appendChild(tr);
+            });
+        }
+
+        function getStatusText(status) {
+            switch(status) {
+                case 'active': return 'Hoạt động';
+                case 'inactive': return 'Ngừng bán';
+                case 'pending': return 'Chờ duyệt';
+                default: return status;
+            }
+        }
+
+        // Search filtering (works on current table)
+        function setupTableSearch() {
+            const searchInput = document.getElementById('searchInput');
+            if (!searchInput) return;
+            searchInput.addEventListener('input', () => {
+                const q = searchInput.value.trim().toLowerCase();
+                const view = getViewForTab(currentTab, currentPeriod);
+                let rows = view.table.rows;
+                if (q) {
+                    rows = rows.filter(r =>
+                        (r.name && r.name.toLowerCase().includes(q)) ||
+                        (r.category && r.category.toLowerCase().includes(q))
+                    );
+                }
+                renderTable({ ...view.table, rows });
+            });
+        }
+
+        // Notification
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            if (!notification || !notificationText) return;
+            notificationText.textContent = message;
+            notification.classList.add('show');
+            setTimeout(() => { notification.classList.remove('show'); }, 3000);
+        }
+
+        // Route loader
+        function showRouteLoader() {
+            const rl = document.getElementById('routeLoader');
+            if (rl) rl.style.display = 'flex';
+        }
+        function hideRouteLoader() {
+            const rl = document.getElementById('routeLoader');
+            if (rl) rl.style.display = 'none';
+        }
+
+        // Refresh uses currentTab/currentPeriod
+        function refreshData() {
+            const refreshBtn = document.getElementById('refreshBtn');
+            const originalHTML = refreshBtn ? refreshBtn.innerHTML : '';
+            if (refreshBtn) { refreshBtn.innerHTML = '<div class="loading"></div> Đang làm mới...'; refreshBtn.disabled = true; }
+            setTimeout(() => {
+                renderForState();
+                if (refreshBtn) { refreshBtn.innerHTML = originalHTML; refreshBtn.disabled = false; }
+                showNotification('Đã làm mới dữ liệu thành công!');
+            }, 1000);
+        }
+
+        // Export current table
+        function exportData() {
+            const exportBtn = document.getElementById('exportBtn');
+            const originalHTML = exportBtn ? exportBtn.innerHTML : '';
+            if (exportBtn) { exportBtn.innerHTML = '<div class="loading"></div> Đang xuất...'; exportBtn.disabled = true; }
+            setTimeout(() => {
+                const view = getViewForTab(currentTab, currentPeriod);
+                let csvContent = "data:text/csv;charset=utf-8,";
+                csvContent += view.table.columns.join(',') + "\n";
+                view.table.rows.forEach(r => {
+                    const cells = [];
+                    if (view.table.columns[0] === 'Ngày') {
+                        cells.push(r.name, r.category, r.revenue, r.note || '', getStatusText(r.status), r.approver || '');
+                    } else {
+                        cells.push(r.name, r.category, r.sold, r.revenue, `${r.rate}%`, getStatusText(r.status));
+                    }
+                    csvContent += cells.join(',') + "\n";
+                });
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement('a');
+                link.setAttribute('href', encodedUri);
+                link.setAttribute('download', `bao_cao_${currentTab}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                if (exportBtn) { exportBtn.innerHTML = originalHTML; exportBtn.disabled = false; }
+                showNotification('Đã xuất báo cáo thành công!');
+            }, 600);
+        }
+
+        // Download chart images
+        function setupChartDownloads() {
+            const btn1 = document.getElementById('downloadChart1Btn');
+            const btn2 = document.getElementById('downloadChart2Btn');
+            if (btn1) btn1.addEventListener('click', () => downloadChart(revenueChart, `chart1_${currentTab}.png`));
+            if (btn2) btn2.addEventListener('click', () => downloadChart(salesChannelChart, `chart2_${currentTab}.png`));
+        }
+        function downloadChart(chart, filename) {
+            if (!chart) return;
+            const a = document.createElement('a');
+            a.href = chart.toBase64Image('image/png', 1);
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // Navigation handling
+        function handleNavigation() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (link.classList.contains('active')) return; // no-op
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                    const nextTab = link.getAttribute('data-tab') || 'overview';
+                    showRouteLoader();
+                    setTimeout(() => {
+                        currentTab = nextTab;
+                        updateHeaderByTab(currentTab);
+                        // Toggle settings vs content
+                        toggleSectionsByTab();
+                        renderForState();
+                        const headerTitle = document.querySelector('.header-left h2');
+                        showNotification(`Đã chuyển đến ${headerTitle ? headerTitle.textContent : 'mục đã chọn'}`);
+                        hideRouteLoader();
+                    }, 400);
+                });
+            });
+        }
+
+        function toggleSectionsByTab() {
+            const settingsSection = document.getElementById('settingsSection');
+            const kpi = document.getElementById('kpiGrid');
+            const charts = document.getElementById('chartsGrid');
+            const table = document.getElementById('tableSection');
+            const isSettings = currentTab === 'settings';
+            if (settingsSection) settingsSection.style.display = isSettings ? 'block' : 'none';
+            if (kpi) kpi.style.display = isSettings ? 'none' : 'grid';
+            if (charts) charts.style.display = isSettings ? 'none' : 'grid';
+            if (table) table.style.display = isSettings ? 'none' : 'block';
+            // also hide period selector when in settings? keep it visible; but sync value
+        }
+
+        function updateHeaderByTab(tab) {
+            const headerTitle = document.querySelector('.header-left h2');
+            const headerDesc = document.querySelector('.header-left p');
+            const map = {
+                overview: ['Dashboard Tổng quan','Chào mừng trở lại! Dưới đây là tóm tắt hiệu suất kinh doanh của bạn.'],
+                sales: ['Quản lý Bán hàng','Theo dõi và phân tích hiệu suất bán hàng của doanh nghiệp.'],
+                customers: ['Quản lý Khách hàng','Quản lý thông tin và theo dõi hành vi khách hàng.'],
+                products: ['Quản lý Sản phẩm','Quản lý danh mục sản phẩm và theo dõi hiệu suất bán hàng.'],
+                finance: ['Quản lý Tài chính','Theo dõi doanh thu, chi phí và báo cáo tài chính.'],
+                reports: ['Báo cáo & Phân tích','Tạo và xem các báo cáo chi tiết về hoạt động kinh doanh.'],
+                departments: ['Phòng ban','Quản lý các phòng ban và nhân viên.'],
+                settings: ['Cài đặt Hệ thống','Cấu hình và tùy chỉnh hệ thống theo nhu cầu.']
+            };
+            const [t, d] = map[tab] || map.overview;
+            if (headerTitle) headerTitle.textContent = t;
+            if (headerDesc) headerDesc.textContent = d;
+        }
+
+        // Period selector handling
+        function handlePeriodChange() {
+            const periodSelector = document.getElementById('periodSelector');
+            if (!periodSelector) return;
+            periodSelector.addEventListener('change', (e) => {
+                currentPeriod = e.target.value;
+                renderForState();
+                showNotification(`Đã cập nhật dữ liệu cho ${e.target.options[e.target.selectedIndex].text}`);
+            });
+        }
+
+        // Chart type toggle for chart1
+        function handleChartTypeToggle() {
+            const chartTypeBtn = document.getElementById('chartTypeBtn');
+            if (!chartTypeBtn) return;
+            chartTypeBtn.addEventListener('click', () => {
+                if (!revenueChart) return;
+                defaultChartType = revenueChart.config.type === 'line' ? 'bar' : 'line';
+                revenueChart.config.type = defaultChartType;
+                chartTypeBtn.innerHTML = defaultChartType === 'line' ? '<i class="fas fa-chart-line"></i> Line Chart' : '<i class="fas fa-chart-bar"></i> Bar Chart';
+                revenueChart.update();
+                const s = { ...getDefaultSettings(), ...loadSettings(), defaultChartType };
+                saveSettings(s);
+            });
+        }
+
+        // Real-time updates simulation (refreshes current view)
+        function startRealTimeUpdates() {
+            // clear existing
+            if (realtimeIntervalId) { clearInterval(realtimeIntervalId); realtimeIntervalId = null; }
+            if (realtimeEnabled) {
+                realtimeIntervalId = setInterval(() => { if (currentTab !== 'settings') renderForState(); }, 30000);
+            }
+        }
+
+        // Mobile menu toggle (unchanged)
+        function addMobileMenu() {
+            const header = document.querySelector('.header-left');
+            if (!header) return;
+            const mobileMenuBtn = document.createElement('button');
+            mobileMenuBtn.className = 'btn btn-outline mobile-menu-btn';
+            mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
+            mobileMenuBtn.style.display = 'none';
+            header.appendChild(mobileMenuBtn);
+            const style = document.createElement('style');
+            style.textContent = `
+                @media (max-width: 1024px) {
+                    .mobile-menu-btn { display: inline-flex !important; position: fixed; top: 1rem; left: 1rem; z-index: 1001; background: var(--white); box-shadow: var(--shadow-md); }
+                    .sidebar { position: fixed; left: -280px; top: 0; height: 100vh; z-index: 1000; transition: left 0.3s ease; }
+                    .sidebar.open { left: 0; }
+                    .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 999; display: none; }
+                    .overlay.show { display: block; }
+                }
+            `;
+            document.head.appendChild(style);
+            const overlay = document.createElement('div');
+            overlay.className = 'overlay';
+            document.body.appendChild(overlay);
+            mobileMenuBtn.addEventListener('click', () => {
+                const sidebar = document.querySelector('.sidebar');
+                if (!sidebar) return;
+                sidebar.classList.toggle('open');
+                overlay.classList.toggle('show');
+            });
+            overlay.addEventListener('click', () => {
+                const sidebar = document.querySelector('.sidebar');
+                if (!sidebar) return;
+                sidebar.classList.remove('open');
+                overlay.classList.remove('show');
+            });
+        }
+
+        // Keyboard shortcuts
+        function addKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'r') { e.preventDefault(); refreshData(); }
+                if ((e.ctrlKey || e.metaKey) && e.key === 'e') { e.preventDefault(); exportData(); }
+                if (e.key >= '1' && e.key <= '7') {
+                    const navLinks = document.querySelectorAll('.nav-link');
+                    const index = parseInt(e.key) - 1;
+                    if (navLinks[index]) { navLinks[index].click(); }
+                }
+            });
+        }
+
+        // Render pipeline for current state
+        function renderForState() {
+            const periodSelector = document.getElementById('periodSelector');
+            if (periodSelector && periodSelector.value !== currentPeriod) periodSelector.value = currentPeriod;
+
+            if (currentTab === 'settings') {
+                syncSettingsUI();
+                return; // settings does not render KPIs/charts/table
+            }
+
+            const view = getViewForTab(currentTab, currentPeriod);
+            renderKPIValues(view.kpis);
+            renderChart1(view.chart1);
+            renderChart2(view.chart2);
+            renderTable(view.table);
+        }
+
+        // Dark mode toggle (with persistence)
+        function addDarkModeToggle() {
+            const darkModeBtn = document.createElement('button');
+            darkModeBtn.className = 'btn btn-outline';
+            darkModeBtn.innerHTML = '<i class="fas fa-moon"></i>';
+            darkModeBtn.id = 'darkModeBtn';
+            const headerRight = document.querySelector('.header-right');
+            if (!headerRight) return;
+            headerRight.insertBefore(darkModeBtn, headerRight.firstChild);
+            const applyTheme = (isDark) => {
+                document.body.classList.toggle('dark-mode', isDark);
+                darkModeBtn.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                const view = getViewForTab(currentTab, currentPeriod);
+                if (revenueChart) { applyAxisTheme(revenueChart, view.chart1); revenueChart.update(); }
+            };
+            const stored = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            applyTheme(stored ? stored === 'dark' : prefersDark);
+            darkModeBtn.addEventListener('click', () => {
+                const isDark = !document.body.classList.contains('dark-mode');
+                applyTheme(isDark);
+                showNotification(isDark ? 'Đã bật chế độ tối' : 'Đã tắt chế độ tối');
+            });
+        }
+
+        // Performance monitoring
+        function logPerformance() {
+            if (window.performance && window.performance.timing && window.performance.timing.loadEventEnd) {
+                const loadTime = window.performance.timing.loadEventEnd - window.performance.timing.navigationStart;
+                console.log(`Dashboard loaded in ${loadTime}ms`);
+            }
+        }
+
+        // Initialize dashboard
+        function initializeDashboard() {
+            // settings -> apply
+            applySettingsToState();
+            // set initial period selector
+            const periodSelector = document.getElementById('periodSelector');
+            if (periodSelector) periodSelector.value = currentPeriod;
+            // set initial active tab
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(l => l.classList.remove('active'));
+            const active = Array.from(navLinks).find(l => l.getAttribute('data-tab') === currentTab) || navLinks[0];
+            if (active) active.classList.add('active');
+
+            initializeCharts();
+            handleNavigation();
+            handlePeriodChange();
+            handleChartTypeToggle();
+            setupChartDownloads();
+            setupTableSearch();
+            addMobileMenu();
+            addKeyboardShortcuts();
+            wireSettingsActions();
+            startRealTimeUpdates();
+            // toggle sections by initial tab
+            toggleSectionsByTab();
+            // initial render
+            renderForState();
+            // fade-in delays
+            const elements = document.querySelectorAll('.fade-in');
+            elements.forEach((element, index) => { element.style.animationDelay = `${index * 0.1}s`; });
+            console.log('Dashboard initialized successfully!');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeDashboard();
+            setTimeout(addDarkModeToggle, 100);
+        });
+        window.addEventListener('load', logPerformance);
+    </script>
+</body>
+</html>
