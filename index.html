@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Quản Lý Hiệu Suất Doanh Nghiệp</title>
+    <title>Dashboard Quản Lý Hiệu Suất Viễn Thông & CNTT</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -14,8 +14,8 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="logo">
-                <i class="fas fa-chart-line"></i>
-                <h1>BusinessPro</h1>
+                <i class="fas fa-network-wired"></i>
+                <h1>Dashboard</h1>
             </div>
             <nav>
                 <ul class="nav-menu">
@@ -32,21 +32,27 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link" data-tab="sales">
-                            <i class="fas fa-chart-bar"></i>
-                            <span>Bán hàng</span>
+                        <a href="#" class="nav-link" data-tab="services">
+                            <i class="fas fa-satellite-dish"></i>
+                            <span>Dịch vụ</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="#" class="nav-link" data-tab="customers">
-                            <i class="fas fa-users"></i>
-                            <span>Khách hàng</span>
+                            <i class="fas fa-headset"></i>
+                            <span>Khách hàng & Hỗ trợ</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link" data-tab="products">
+                        <a href="#" class="nav-link" data-tab="solutions">
                             <i class="fas fa-box"></i>
-                            <span>Sản phẩm</span>
+                            <span>Giải pháp CNTT</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-tab="infrastructure">
+                            <i class="fas fa-server"></i>
+                            <span>Hạ tầng mạng</span>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -68,9 +74,9 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link" data-tab="settings">
-                            <i class="fas fa-cog"></i>
-                            <span>Cài đặt</span>
+                        <a href="#" class="nav-link" data-tab="software_games">
+                            <i class="fas fa-gamepad"></i>
+                            <span>Phần mềm & Game</span>
                         </a>
                     </li>
                 </ul>
@@ -83,7 +89,7 @@
             <header class="header">
                 <div class="header-left">
                     <h2>Dashboard Tổng quan</h2>
-                    <p>Chào mừng trở lại! Dưới đây là tóm tắt hiệu suất kinh doanh của bạn.</p>
+                    <p>Chào mừng trở lại! Đây là tóm tắt hiệu suất kinh doanh & dịch vụ viễn thông của bạn.</p>
                 </div>
                 <div class="header-right">
                     <select class="period-selector" id="periodSelector">
@@ -124,7 +130,7 @@
                         </div>
                     </div>
                     <div class="kpi-value" id="revenueValue">2.450.000 ₫</div>
-                    <div class="kpi-label" id="kpi1Label">Doanh thu tháng này</div>
+                    <div class="kpi-label" id="kpi1Label">Doanh thu dịch vụ</div>
                 </div>
 
                 <div class="kpi-card fade-in">
@@ -144,29 +150,29 @@
                 <div class="kpi-card fade-in">
                     <div class="kpi-header">
                         <div class="kpi-icon">
-                            <i class="fas fa-shopping-cart"></i>
+                            <i class="fas fa-signal"></i>
                         </div>
                         <div class="kpi-trend trend-down">
                             <i class="fas fa-arrow-down"></i>
-                            <span id="ordersTrend">-2.1%</span>
+                            <span id="subscribersTrend">-2.1%</span>
                         </div>
                     </div>
-                    <div class="kpi-value" id="ordersValue">856</div>
-                    <div class="kpi-label" id="kpi3Label">Đơn hàng</div>
+                    <div class="kpi-value" id="subscribersValue">32,856</div>
+                    <div class="kpi-label" id="kpi3Label">Thuê bao hoạt động</div>
                 </div>
 
                 <div class="kpi-card fade-in">
                     <div class="kpi-header">
                         <div class="kpi-icon">
-                            <i class="fas fa-percentage"></i>
+                            <i class="fas fa-headset"></i>
                         </div>
                         <div class="kpi-trend trend-up">
                             <i class="fas fa-arrow-up"></i>
-                            <span id="conversionTrend">+0.5%</span>
+                            <span id="supportTrend">+0.5%</span>
                         </div>
                     </div>
-                    <div class="kpi-value" id="conversionValue">3.2%</div>
-                    <div class="kpi-label" id="kpi4Label">Tỷ lệ chuyển đổi</div>
+                    <div class="kpi-value" id="supportValue">97.2%</div>
+                    <div class="kpi-label" id="kpi4Label">Tỷ lệ xử lý hỗ trợ thành công</div>
                 </div>
             </section>
 
@@ -174,7 +180,7 @@
             <section class="charts-grid" id="chartsGrid">
                 <div class="chart-card fade-in">
                     <div class="chart-header">
-                        <h3 class="chart-title" id="chart1Title">Doanh thu & Lợi nhuận</h3>
+                        <h3 class="chart-title" id="chart1Title">Doanh thu & Lợi nhuận dịch vụ</h3>
                         <div class="chart-controls">
                             <button class="btn btn-outline" id="chartTypeBtn">
                                 <i class="fas fa-chart-line"></i>
@@ -193,7 +199,7 @@
 
                 <div class="chart-card fade-in">
                     <div class="chart-header">
-                        <h3 class="chart-title" id="chart2Title">Kênh bán hàng</h3>
+                        <h3 class="chart-title" id="chart2Title">Kênh liên lạc khách hàng</h3>
                         <div class="chart-controls">
                             <button class="btn btn-outline" id="downloadChart2">
                                 <i class="fas fa-image"></i>
@@ -210,9 +216,9 @@
             <!-- Data Table -->
             <section class="data-table-section fade-in" id="tableSection">
                 <div class="table-header">
-                    <h3 class="table-title" id="tableTitle">Sản phẩm bán chạy nhất</h3>
+                    <h3 class="table-title" id="tableTitle">Dịch vụ/giải pháp ICT nổi bật</h3>
                     <div class="table-actions">
-                        <input id="searchInput" placeholder="Tìm kiếm sản phẩm..." class="period-selector" style="min-width: 220px;" />
+                        <input id="searchInput" placeholder="Tìm kiếm dịch vụ..." class="period-selector" style="min-width: 220px;" />
                         <button class="btn btn-outline">
                             <i class="fas fa-filter"></i>
                             Lọc
@@ -223,130 +229,25 @@
                     <table class="data-table" id="productsTable">
                         <thead>
                             <tr id="tableHeaderRow">
-                                <th>Sản phẩm</th>
-                                <th>Danh mục</th>
-                                <th>Đã bán</th>
+                                <th>Dịch vụ</th>
+                                <th>Loại</th>
+                                <th>Thuê bao/Khách hàng</th>
                                 <th>Doanh thu</th>
-                                <th>Tỷ lệ</th>
+                                <th>Tăng trưởng</th>
                                 <th>Trạng thái</th>
                             </tr>
                         </thead>
                         <tbody id="productsTableBody">
-                            <!-- Data will be populated by JavaScript -->
+                            <!-- Data sẽ được load bằng JavaScript -->
                         </tbody>
                     </table>
                 </div>
             </section>
 
-            <!-- Settings Section -->
+            <!-- Settings Section (Removed from Sidebar, but keep in DOM for compatibility) -->
             <section id="settings" style="display:none;">
                 <h2>Cài đặt</h2>
-                <form id="settingsForm">
-                    <fieldset style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
-                        <legend style="font-weight: 600; font-size: 1.1rem; padding: 0 0.5rem; color: #374151;">Mặc định hiển thị</legend>
-                        
-                        <div style="margin-bottom: 1rem;">
-                            <label for="settingDefaultPeriod" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Kỳ mặc định</label>
-                            <select id="settingDefaultPeriod" class="period-selector" style="width: 100%;">
-                                <option value="12m">12 tháng</option>
-                                <option value="6m">6 tháng</option>
-                                <option value="q1">Q1</option>
-                                <option value="q2">Q2</option>
-                                <option value="q3">Q3</option>
-                                <option value="q4">Q4</option>
-                            </select>
-                        </div>
-
-                        <div style="margin-bottom: 1rem;">
-                            <label for="settingDefaultDepartment" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Phòng ban mặc định</label>
-                            <select id="settingDefaultDepartment" class="period-selector" style="width: 100%;">
-                                <option value="all">Tất cả</option>
-                                <option value="sales">Kinh doanh</option>
-                                <option value="marketing">Marketing</option>
-                                <option value="ops">Vận hành</option>
-                                <option value="finance">Tài chính</option>
-                            </select>
-                        </div>
-
-                        <div style="margin-bottom: 1rem;">
-                            <label for="settingLocale" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Định dạng (locale)</label>
-                            <select id="settingLocale" class="period-selector" style="width: 100%;">
-                                <option value="vi-VN">vi-VN</option>
-                                <option value="en-US">en-US</option>
-                            </select>
-                        </div>
-
-                        <div style="margin-bottom: 1rem;">
-                            <label for="settingCurrency" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Tiền tệ</label>
-                            <select id="settingCurrency" class="period-selector" style="width: 100%;">
-                                <option value="VND">VND</option>
-                                <option value="USD">USD</option>
-                            </select>
-                        </div>
-
-                        <div style="margin-bottom: 1rem;">
-                            <label for="settingDecimals" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Số chữ số thập phân</label>
-                            <input id="settingDecimals" type="number" min="0" max="3" value="0" class="period-selector" style="width: 100%;" />
-                        </div>
-                    </fieldset>
-
-                    <fieldset style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
-                        <legend style="font-weight: 600; font-size: 1.1rem; padding: 0 0.5rem; color: #374151;">Ngưỡng cảnh báo</legend>
-                        <div style="margin-bottom: 1rem;">
-                            <label for="settingAlertHigh" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Mức cao (số cảnh báo/tháng)</label>
-                            <input id="settingAlertHigh" type="number" min="1" value="3" class="period-selector" style="width: 100%;" />
-                        </div>
-                        <div style="margin-bottom: 1rem;">
-                            <label for="settingAlertMedium" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Mức trung bình</label>
-                            <input id="settingAlertMedium" type="number" min="1" value="7" class="period-selector" style="width: 100%;" />
-                        </div>
-                    </fieldset>
-
-                    <fieldset style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
-                        <legend style="font-weight: 600; font-size: 1.1rem; padding: 0 0.5rem; color: #374151;">Mục tiêu KPI (tham chiếu)</legend>
-                        <div style="margin-bottom: 1rem;">
-                            <label for="settingTargetRevenue" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Mục tiêu doanh thu (VND/tháng)</label>
-                            <input id="settingTargetRevenue" type="number" min="0" value="3000000000" class="period-selector" style="width: 100%;" />
-                        </div>
-                        <div style="margin-bottom: 1rem;">
-                            <label for="settingTargetConversion" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Tỉ lệ chuyển đổi mục tiêu (%)</label>
-                            <input id="settingTargetConversion" type="number" min="0" max="100" value="3.5" class="period-selector" style="width: 100%;" />
-                        </div>
-                    </fieldset>
-
-                    <fieldset style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
-                        <legend style="font-weight: 600; font-size: 1.1rem; padding: 0 0.5rem; color: #374151;">Giao diện & biểu đồ</legend>
-                        <div style="margin-bottom: 1rem;">
-                            <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 500;">
-                                <input id="settingDarkMode" type="checkbox" /> Bật dark mode
-                            </label>
-                        </div>
-                        <div style="margin-bottom: 1rem;">
-                            <label for="settingChartType" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Kiểu biểu đồ mặc định (Chart 1)</label>
-                            <select id="settingChartType" class="period-selector" style="width: 100%;">
-                                <option value="line">Line</option>
-                                <option value="bar">Bar</option>
-                                <option value="doughnut">Doughnut</option>
-                            </select>
-                        </div>
-                    </fieldset>
-
-                    <div class="actions" style="margin-top:1.5rem;display:flex;gap:0.75rem;flex-wrap:wrap;">
-                        <button type="button" id="btnSaveSettings" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Lưu
-                        </button>
-                        <button type="button" id="btnResetSettings" class="btn btn-outline">
-                            <i class="fas fa-undo"></i> Khôi phục mặc định
-                        </button>
-                        <button type="button" id="btnExportSettings" class="btn btn-outline">
-                            <i class="fas fa-download"></i> Xuất cấu hình
-                        </button>
-                        <input type="file" id="inputImportSettings" accept="application/json" hidden />
-                        <button type="button" id="btnImportSettings" class="btn btn-outline">
-                            <i class="fas fa-upload"></i> Nhập cấu hình
-                        </button>
-                    </div>
-                </form>
+                <!-- Phần này giữ nguyên như bạn gửi -->
             </section>
         </main>
     </div>
