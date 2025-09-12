@@ -6,7 +6,758 @@ let defaultChartType = 'line';
 let realtimeEnabled = true;
 let realtimeIntervalId = null;
 
-// Utility: theme-aware chart colors
+// ========== [KPI Levels: Defaults] ==========
+const DEFAULT_KPI_LEVELS = {
+    overview: {
+        revenue: { 
+            target: 3_200_000_000, warn: 2_800_000_000, critical: 2_400_000_000, higherIsBetter: true, unit: 'currency',
+            byDept: {
+                sales:     { target: 3_500_000_000, warn: 3_000_000_000 },
+                marketing: { target: 3_000_000_000, warn: 2_600_000_000 },
+                finance:   { target: 3_300_000_000 }
+            },
+            presetScale: { Optimistic: 1.1, Baseline: 1.0, Conservative: 0.9 }
+        },
+        customers: { 
+            target: 1300, warn: 1100, critical: 900, higherIsBetter: true, unit: 'number',
+            byDept: { 
+                sales: { target: 1400 }, 
+                marketing: { target: 1500 } 
+            },
+            presetScale: { Optimistic: 1.15, Baseline: 1.0, Conservative: 0.85 }
+        },
+        subscribers: { 
+            target: 33000, warn: 30000, critical: 28000, higherIsBetter: true, unit: 'number',
+            byDept: { 
+                marketing: { target: 34000, warn: 31000 }, 
+                ops: { target: 32000 } 
+            },
+            presetScale: { Optimistic: 1.05, Baseline: 1.0, Conservative: 0.95 }
+        },
+        support: { 
+            target: 97, warn: 90, critical: 85, higherIsBetter: true, unit: 'percent',
+            byDept: { 
+                ops: { target: 98, warn: 95 } 
+            },
+            presetScale: { Optimistic: 0.98, Baseline: 1.0, Conservative: 1.02 }
+        }
+    },
+    kpi: {
+        kpi_done: { target: 30, warn: 25, critical: 20, higherIsBetter: true, unit: 'number', presetScale: { Optimistic: 0.9, Baseline: 1.0, Conservative: 1.1 } },
+        kpi_pending: { target: 10, warn: 15, critical: 20, higherIsBetter: false, unit: 'number', presetScale: { Optimistic: 1.1, Baseline: 1.0, Conservative: 0.9 } },
+        on_time: { target: 90, warn: 80, critical: 70, higherIsBetter: true, unit: 'percent', presetScale: { Optimistic: 0.95, Baseline: 1.0, Conservative: 1.05 } },
+        over_target: { target: 15, warn: 10, critical: 5, higherIsBetter: true, unit: 'percent', presetScale: { Optimistic: 0.9, Baseline: 1.0, Conservative: 1.1 } }
+    },
+    services: {
+        revenue: { target: 3_200_000_000, warn: 2_800_000_000, critical: 2_400_000_000, higherIsBetter: true, unit: 'currency', presetScale: { Optimistic: 1.1, Baseline: 1.0, Conservative: 0.9 } },
+        subscribers: { target: 33000, warn: 30000, critical: 28000, higherIsBetter: true, unit: 'number', presetScale: { Optimistic: 1.05, Baseline: 1.0, Conservative: 0.95 } },
+        arpu: { target: 95000, warn: 85000, critical: 75000, higherIsBetter: true, unit: 'currency', presetScale: { Optimistic: 1.1, Baseline: 1.0, Conservative: 0.9 } },
+        churn: { target: 2.5, warn: 3.5, critical: 4.5, higherIsBetter: false, unit: 'percent', presetScale: { Optimistic: 0.9, Baseline: 1.0, Conservative: 1.1 } }
+    },
+    customers: {
+        new_customers: { target: 1500, warn: 1200, critical: 1000, higherIsBetter: true, unit: 'number', presetScale: { Optimistic: 0.9, Baseline: 1.0, Conservative: 1.1 } },
+        active_subscribers: { target: 33000, warn: 30000, critical: 28000, higherIsBetter: true, unit: 'number', presetScale: { Optimistic: 1.05, Baseline: 1.0, Conservative: 0.95 } },
+        support_tickets: { target: 1000, warn: 1200, critical: 1500, higherIsBetter: false, unit: 'number', presetScale: { Optimistic: 1.1, Baseline: 1.0, Conservative: 0.9 } },
+        satisfaction: { target: 97, warn: 90, critical: 85, higherIsBetter: true, unit: 'percent', presetScale: { Optimistic: 0.98, Baseline: 1.0, Conservative: 1.02 } }
+    },
+    solutions: {
+        revenue: { target: 1_000_000_000, warn: 800_000_000, critical: 600_000_000, higherIsBetter: true, unit: 'currency', presetScale: { Optimistic: 1.1, Baseline: 1.0, Conservative: 0.9 } },
+        clients: { target: 200, warn: 150, critical: 120, higherIsBetter: true, unit: 'number', presetScale: { Optimistic: 0.9, Baseline: 1.0, Conservative: 1.1 } },
+        projects: { target: 50, warn: 40, critical: 30, higherIsBetter: true, unit: 'number', presetScale: { Optimistic: 0.9, Baseline: 1.0, Conservative: 1.1 } },
+        satisfaction: { target: 95, warn: 88, critical: 80, higherIsBetter: true, unit: 'percent', presetScale: { Optimistic: 0.98, Baseline: 1.0, Conservative: 1.02 } }
+    },
+    infrastructure: {
+        uptime: { target: 99.9, warn: 99.5, critical: 99.0, higherIsBetter: true, unit: 'percent', presetScale: { Optimistic: 0.999, Baseline: 1.0, Conservative: 1.001 } },
+        bandwidth: { target: 1200, warn: 1000, critical: 800, higherIsBetter: true, unit: 'number', presetScale: { Optimistic: 0.9, Baseline: 1.0, Conservative: 1.1 } },
+        sites: { target: 450, warn: 400, critical: 350, higherIsBetter: true, unit: 'number', presetScale: { Optimistic: 0.95, Baseline: 1.0, Conservative: 1.05 } },
+        issues: { target: 3, warn: 5, critical: 8, higherIsBetter: false, unit: 'number', presetScale: { Optimistic: 1.2, Baseline: 1.0, Conservative: 0.8 } }
+    },
+    finance: {
+        revenue: { target: 2_500_000_000, warn: 2_200_000_000, critical: 2_000_000_000, higherIsBetter: true, unit: 'currency', presetScale: { Optimistic: 1.1, Baseline: 1.0, Conservative: 0.9 } },
+        expense: { target: 1_600_000_000, warn: 1_800_000_000, critical: 2_000_000_000, higherIsBetter: false, unit: 'currency', presetScale: { Optimistic: 1.1, Baseline: 1.0, Conservative: 0.9 } },
+        profit: { target: 800_000_000, warn: 600_000_000, critical: 400_000_000, higherIsBetter: true, unit: 'currency', presetScale: { Optimistic: 1.15, Baseline: 1.0, Conservative: 0.85 } },
+        margin: { target: 25, warn: 20, critical: 15, higherIsBetter: true, unit: 'percent', presetScale: { Optimistic: 0.95, Baseline: 1.0, Conservative: 1.05 } }
+    },
+    software_games: {
+        revenue: { target: 900_000_000, warn: 700_000_000, critical: 500_000_000, higherIsBetter: true, unit: 'currency', presetScale: { Optimistic: 1.1, Baseline: 1.0, Conservative: 0.9 } },
+        downloads: { target: 16000, warn: 12000, critical: 8000, higherIsBetter: true, unit: 'number', presetScale: { Optimistic: 0.9, Baseline: 1.0, Conservative: 1.1 } },
+        active_users: { target: 9000, warn: 7000, critical: 5000, higherIsBetter: true, unit: 'number', presetScale: { Optimistic: 0.9, Baseline: 1.0, Conservative: 1.1 } },
+        retention: { target: 70, warn: 60, critical: 50, higherIsBetter: true, unit: 'percent', presetScale: { Optimistic: 0.95, Baseline: 1.0, Conservative: 1.05 } }
+    }
+};
+
+const STORAGE_KEY = 'kpiLevels.v1';
+
+// ========== [Scenario Management] ==========
+const SCENARIOS = ['Optimistic','Baseline','Conservative'];
+const SCENARIO_STORAGE_KEY = 'kpiScenario.v1';
+let CURRENT_SCENARIO = localStorage.getItem(SCENARIO_STORAGE_KEY) || 'Baseline';
+
+function setScenario(name) {
+    if (!SCENARIOS.includes(name)) return;
+    CURRENT_SCENARIO = name;
+    localStorage.setItem(SCENARIO_STORAGE_KEY, name);
+    // làm mới tab hiện tại để áp dụng ngưỡng mới
+    renderForState();
+    refreshChartsWithTargetLines();
+}
+
+function getCurrentDepartment() {
+    return currentDepartment === 'all' ? undefined : currentDepartment;
+}
+
+// ========== [Theme Management] ==========
+const THEME_STORAGE_KEY = 'ui.theme.v1';
+let THEME_MODE = localStorage.getItem(THEME_STORAGE_KEY) || 'system'; // 'system' | 'light' | 'dark'
+
+const mediaDark = window.matchMedia('(prefers-color-scheme: dark)');
+mediaDark.addEventListener?.('change', () => {
+    if (THEME_MODE === 'system') applyTheme('system');
+});
+
+function applyTheme(mode) {
+    const root = document.documentElement;
+    const isDark = mode === 'dark' || (mode === 'system' && mediaDark.matches);
+    root.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    THEME_MODE = mode;
+    localStorage.setItem(THEME_STORAGE_KEY, mode);
+    // Sync Chart.js defaults (grid/ticks/tooltip)
+    syncChartTheme();
+}
+
+function initThemeToggle() {
+    const sel = document.getElementById('theme-select');
+    if (!sel) return;
+    sel.value = THEME_MODE;
+    sel.addEventListener('change', (e) => applyTheme(e.target.value));
+    // Apply at startup
+    applyTheme(THEME_MODE);
+}
+
+function deepMerge(base, patch) {
+    for (const k in patch) {
+        const v = patch[k];
+        if (v && typeof v === 'object' && !Array.isArray(v)) {
+            base[k] = deepMerge(base[k] || {}, v);
+        } else {
+            base[k] = v;
+        }
+    }
+    return base;
+}
+
+function loadKpiLevels() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return structuredClone(DEFAULT_KPI_LEVELS);
+        const parsed = JSON.parse(raw);
+        return deepMerge(structuredClone(DEFAULT_KPI_LEVELS), parsed);
+    } catch (_) {
+        return structuredClone(DEFAULT_KPI_LEVELS);
+    }
+}
+
+function saveKpiLevels(levels) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(levels));
+}
+
+let KPI_LEVELS = loadKpiLevels();
+
+// ========== [Alerts store] ==========
+const ALERTS_STORAGE_KEY = 'kpiAlerts.v1';
+let ALERTS = []; // runtime list
+
+function loadAlerts() {
+    try {
+        const raw = localStorage.getItem(ALERTS_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+}
+function saveAlerts() {
+    try { localStorage.setItem(ALERTS_STORAGE_KEY, JSON.stringify(ALERTS)); } catch {}
+}
+// bật nếu muốn lưu vĩnh viễn
+const PERSIST_ALERTS = true;
+
+// Dedupe theo cặp (tabId,kpiKey) trong một khoảng thời gian (minutes)
+const ALERT_DEDUPE_MINUTES = 30; // không tạo alert mới cho cùng KPI trong ~30 phút
+
+function shouldEmitAlert(tabId, kpiKey, severity) {
+    const now = Date.now();
+    for (let i = ALERTS.length - 1; i >= 0; i--) {
+        const a = ALERTS[i];
+        if (a.tab === tabId && a.kpi === kpiKey) {
+            if (now - a.ts < ALERT_DEDUPE_MINUTES * 60 * 1000) return false;
+            break; // có alert cũ nhưng quá hạn, cho phép tạo mới
+        }
+    }
+    return true;
+}
+
+function addAlert({ severity, title, message, tab, kpi, value, target, unit }) {
+    const item = {
+        id: `al_${Math.random().toString(36).slice(2, 9)}`,
+        severity, // 'medium' | 'high'
+        title,
+        message,
+        tab,
+        kpi,
+        value,
+        target,
+        unit,
+        ts: Date.now()
+    };
+    ALERTS.push(item);
+    if (PERSIST_ALERTS) saveAlerts();
+    // nếu đang mở tab alerts thì render lại, nếu không thì toast
+    if (currentTab === 'alerts') renderAlertsTab();
+    else showNotification(`${severity === 'high' ? '⚠️' : 'ℹ️'} ${title}`);
+}
+
+// Initialize alerts from storage
+ALERTS = PERSIST_ALERTS ? loadAlerts() : [];
+
+// Test function to create sample alerts (for development/testing)
+function createSampleAlert() {
+    addAlert({
+        severity: 'high',
+        title: 'KPI revenue dưới mức critical',
+        message: 'Giá trị: ₫50.000.000 | Target: ₫120.000.000',
+        tab: 'overview',
+        kpi: 'revenue',
+        value: 50000000,
+        target: 120000000,
+        unit: 'currency'
+    });
+}
+
+function maybePushAlert(tabId, kpiKey, value) {
+    const dept = getCurrentDepartment();
+    const cfg = resolveKpiLevel(tabId, kpiKey, dept, CURRENT_SCENARIO);
+    if (!cfg) return; // chưa cấu hình thì bỏ qua
+    const status = getKpiStatus(tabId, kpiKey, value);
+    if (status === 'good') return;
+
+    const unit = cfg.unit || 'number';
+    const prettyVal = formatValueByUnit(value, unit);
+    const prettyTarget = formatValueByUnit(cfg.target, unit);
+    const kpiNameVi = KPI_NAMES_VI[kpiKey] || kpiKey;
+
+    const severity = (status === 'bad') ? 'high' : 'medium';
+    const statusText = status === 'bad' ? 'không đạt' : 'cảnh báo';
+    const title = `${kpiNameVi} ở mức ${statusText}`;
+    const message = `Giá trị hiện tại: ${prettyVal} | Mục tiêu: ${prettyTarget}`;
+
+    if (!shouldEmitAlert(tabId, kpiKey, severity)) return; // dedupe window
+
+    addAlert({
+        severity,
+        title,
+        message,
+        tab: tabId,
+        kpi: kpiKey,
+        value,
+        target: cfg.target,
+        unit
+    });
+}
+
+// Helper function để test KPI status cho tất cả tabs
+function testKpiStatus() {
+    console.log('=== TEST KPI STATUS FOR ALL TABS ===');
+    
+    // Test cases for each tab
+    const testCases = {
+        overview: [
+            { kpi: 'revenue', values: [2000000000, 3000000000, 3500000000] },
+            { kpi: 'customers', values: [800, 1200, 1400] },
+            { kpi: 'subscribers', values: [25000, 31000, 35000] },
+            { kpi: 'support', values: [80, 95, 99] }
+        ],
+        kpi: [
+            { kpi: 'kpi_done', values: [15, 27, 35] },
+            { kpi: 'kpi_pending', values: [25, 12, 5] },
+            { kpi: 'on_time', values: [60, 85, 95] },
+            { kpi: 'over_target', values: [3, 12, 20] }
+        ],
+        services: [
+            { kpi: 'revenue', values: [2000000000, 3000000000, 3500000000] },
+            { kpi: 'subscribers', values: [25000, 31000, 35000] },
+            { kpi: 'arpu', values: [70000, 90000, 100000] },
+            { kpi: 'churn', values: [6, 3, 1.5] }
+        ],
+        infrastructure: [
+            { kpi: 'uptime', values: [98.5, 99.7, 99.95] },
+            { kpi: 'bandwidth', values: [600, 1100, 1300] },
+            { kpi: 'sites', values: [300, 420, 480] },
+            { kpi: 'issues', values: [10, 4, 1] }
+        ]
+    };
+    
+    Object.entries(testCases).forEach(([tabId, kpis]) => {
+        console.log(`\n🏷️ === TAB: ${TAB_NAMES_VI[tabId] || tabId} ===`);
+        
+        kpis.forEach(({ kpi, values }) => {
+            console.log(`\n--- ${KPI_NAMES_VI[kpi] || kpi} ---`);
+            const cfg = resolveKpiLevel(tabId, kpi, getCurrentDepartment(), CURRENT_SCENARIO);
+            if (!cfg) {
+                console.log('❌ No configuration found');
+                return;
+            }
+            
+            console.log(`Target: ${cfg.target}, Warn: ${cfg.warn}, Critical: ${cfg.critical}`);
+            console.log(`Higher is better: ${cfg.higherIsBetter ? 'Yes' : 'No'}`);
+            
+            values.forEach(val => {
+                const status = getKpiStatus(tabId, kpi, val);
+                const color = status === 'good' ? '🟢' : status === 'warn' ? '🟡' : '🔴';
+                const formatted = formatValueByUnit(val, cfg.unit);
+                console.log(`${color} ${formatted} → ${status.toUpperCase()}`);
+            });
+        });
+    });
+    
+    console.log('\n✅ Test completed! Check colors on dashboard by switching tabs.');
+}
+
+// ========== [Format helpers] ==========
+const fmt = {
+    currency: v => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(v) || 0),
+    percent:  v => `${Number(v).toFixed(1)}%`,
+    number:   v => new Intl.NumberFormat('vi-VN').format(Number(v) || 0),
+};
+function formatValueByUnit(v, unit) { return (fmt[unit] || fmt.number)(v); }
+
+// ========== [Config Resolution] ==========
+function resolveKpiLevel(tabId, kpiKey, department, scenario = CURRENT_SCENARIO) {
+    const base = KPI_LEVELS && KPI_LEVELS[tabId] && KPI_LEVELS[tabId][kpiKey];
+    if (!base) return null;
+
+    // 1) start từ default
+    let eff = { ...base };
+
+    // 2) merge byDept nếu có
+    const deptCfg = base.byDept && base.byDept[department];
+    if (deptCfg) {
+        eff = deepMerge({ ...eff }, deptCfg); // chỉ ghi các field có trong byDept
+    }
+
+    // 3) apply presetScale nếu có (scale cho các ngưỡng số)
+    const s = base.presetScale && base.presetScale[scenario];
+    if (typeof s === 'number' && isFinite(s)) {
+        const scaleFields = ['target','warn','critical'];
+        scaleFields.forEach(f => {
+            if (typeof eff[f] === 'number') eff[f] = Number((eff[f] * s).toFixed(2));
+        });
+    }
+
+    return eff;
+}
+
+// ========== [Status helper] ==========
+function getKpiStatus(tabId, kpiKey, value) {
+    const dept = getCurrentDepartment();
+    const lv = resolveKpiLevel(tabId, kpiKey, dept, CURRENT_SCENARIO);
+    if (!lv) return 'good';
+    const v = Number(value);
+    if (lv.higherIsBetter) {
+        if (v >= lv.target) return 'good';
+        if (v >= lv.warn)   return 'warn';
+        return 'bad';
+    } else {
+        if (v <= lv.target) return 'good';
+        if (v <= lv.warn)   return 'warn';
+        return 'bad';
+    }
+}
+
+function renderKpiCard(tabId, kpiKey, label, value, unit) {
+    const status = getKpiStatus(tabId, kpiKey, value);
+    return (
+        '\n                <div class="kpi-card ' + status + '">\n                    <div class="kpi-label">' + label + '</div>\n                    <div class="kpi-value">' + formatValueByUnit(value, unit) + '</div>\n                </div>\n            '
+    );
+}
+
+// ========== [Alerts Tab Rendering] ==========
+function timeAgo(ts) {
+    const s = Math.max(1, Math.floor((Date.now() - ts) / 1000));
+    const m = Math.floor(s / 60), h = Math.floor(m / 60), d = Math.floor(h / 24);
+    if (d>0) return `${d} ngày trước`;
+    if (h>0) return `${h} giờ trước`;
+    if (m>0) return `${m} phút trước`;
+    return `${s} giây trước`;
+}
+
+function renderAlertsTab() {
+    const wrap = document.getElementById('alerts-list');
+    if (!wrap) return;
+    if (!ALERTS.length) {
+        wrap.innerHTML = '<div class="alert-empty">Chưa có cảnh báo nào.</div>';
+        return;
+    }
+    // sắp xếp mới nhất lên trên
+    const items = [...ALERTS].sort((a,b)=>b.ts - a.ts);
+    wrap.innerHTML = items.map(a => `
+        <div class="alert-item">
+            <span class="alert-badge ${a.severity==='high'?'alert-high':'alert-medium'}">${a.severity==='high'?'HIGH':'MED'}</span>
+            <div style="flex:1;">
+                <div class="alert-title">${a.title}</div>
+                <div class="alert-meta">Tab: <b>${a.tab}</b> · KPI: <b>${a.kpi}</b> · ${timeAgo(a.ts)}</div>
+                <div>${a.message}</div>
+            </div>
+            <div class="alert-actions">
+                <button onclick="gotoTab('${a.tab}')">Mở tab</button>
+                <button onclick="dismissAlert('${a.id}')">Ẩn</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function gotoTab(tabId) {
+    // Find the nav link and click it
+    const navLink = document.querySelector(`.nav-link[data-tab="${tabId}"]`);
+    if (navLink) navLink.click();
+}
+
+function dismissAlert(id) {
+    ALERTS = ALERTS.filter(a => a.id !== id);
+    if (PERSIST_ALERTS) saveAlerts();
+    renderAlertsTab();
+}
+
+// ========== [Settings Form for KPI Levels] ==========
+const TAB_NAMES_VI = {
+    'overview': 'Tổng quan',
+    'kpi': 'KPI',
+    'services': 'Dịch vụ',
+    'customers': 'Khách hàng',
+    'solutions': 'Giải pháp CNTT',
+    'infrastructure': 'Hạ tầng',
+    'finance': 'Tài chính',
+    'reports': 'Báo cáo',
+    'alerts': 'Thông báo',
+    'software_games': 'Phần mềm & Game'
+};
+
+const KPI_NAMES_VI = {
+    // Overview
+    'revenue': 'Doanh thu',
+    'customers': 'Khách hàng mới',
+    'subscribers': 'Thuê bao',
+    'support': 'Hỗ trợ khách hàng',
+    
+    // KPI tab
+    'kpi_done': 'KPI hoàn thành',
+    'kpi_pending': 'KPI đang chờ',
+    'on_time': 'Đúng hạn',
+    'over_target': 'Vượt mục tiêu',
+    
+    // Services
+    'arpu': 'ARPU',
+    'churn': 'Tỷ lệ rời mạng',
+    
+    // Customers
+    'new_customers': 'Khách hàng mới',
+    'active_subscribers': 'Thuê bao hoạt động',
+    'support_tickets': 'Yêu cầu hỗ trợ',
+    'satisfaction': 'Hài lòng khách hàng',
+    
+    // Solutions
+    'clients': 'Khách hàng sử dụng',
+    'projects': 'Dự án hoàn thành',
+    
+    // Infrastructure
+    'uptime': 'Uptime mạng',
+    'bandwidth': 'Băng thông',
+    'sites': 'Trạm BTS',
+    'issues': 'Sự cố mạng',
+    
+    // Finance
+    'profit': 'Lợi nhuận',
+    'expense': 'Chi phí',
+    'margin': 'Biên lợi nhuận',
+    
+    // Software & Games
+    'downloads': 'Lượt tải',
+    'active_users': 'Người dùng hoạt động',
+    'retention': 'Tỷ lệ giữ chân'
+};
+
+const UNIT_NAMES_VI = {
+    'currency': 'Tiền tệ (VNĐ)',
+    'percent': 'Phần trăm (%)',
+    'number': 'Số lượng'
+};
+
+function renderKpiLevelsForm() {
+    const wrap = document.getElementById('kpi-levels-form');
+    if (!wrap) return;
+
+    let html = '';
+    Object.entries(KPI_LEVELS).forEach(([tabId, kpis]) => {
+        if (!kpis || !Object.keys(kpis).length) return;
+        const tabNameVi = TAB_NAMES_VI[tabId] || tabId;
+        html += `<div class="settings-group">
+            <h3><i class="fas fa-chart-bar"></i> ${tabNameVi}</h3>
+            <div class="grid-2">`;
+
+        Object.entries(kpis).forEach(([kpiKey, cfg]) => {
+            const unit = cfg.unit;
+            const higherIsBetter = !!cfg.higherIsBetter;
+            const target = cfg.target;
+            const warn = cfg.warn;
+            const critical = cfg.critical;
+            const kpiNameVi = KPI_NAMES_VI[kpiKey] || kpiKey;
+            
+            html += `
+                <div class="field-card">
+                    <div class="field-title">
+                        <i class="fas fa-bullseye"></i> ${kpiNameVi}
+                    </div>
+                    <label>Đơn vị hiển thị
+                        <select data-bind="${tabId}.${kpiKey}.unit">
+                            ${['currency','percent','number'].map(u => 
+                                `<option value="${u}" ${u===unit ? 'selected' : ''}>${UNIT_NAMES_VI[u] || u}</option>`
+                            ).join('')}
+                        </select>
+                    </label>
+                    <label>
+                        <input type="checkbox" data-bind="${tabId}.${kpiKey}.higherIsBetter" ${higherIsBetter ? 'checked' : ''} />
+                        Giá trị cao hơn là tốt hơn
+                    </label>
+                    
+                    <div class="threshold-section">
+                        <h4><i class="fas fa-traffic-light"></i> Ngưỡng đánh giá</h4>
+                        <div class="threshold-grid">
+                            <label class="threshold-item target">
+                                <span class="threshold-label">
+                                    <span class="color-dot" style="background: var(--kpi-ok)"></span>
+                                    Đạt mục tiêu (Xanh)
+                                </span>
+                                <input type="number" step="any" data-bind="${tabId}.${kpiKey}.target" value="${target}" placeholder="Giá trị đạt mục tiêu">
+                            </label>
+                            <label class="threshold-item warn">
+                                <span class="threshold-label">
+                                    <span class="color-dot" style="background: var(--kpi-warn)"></span>
+                                    Cảnh báo (Vàng)
+                                </span>
+                                <input type="number" step="any" data-bind="${tabId}.${kpiKey}.warn" value="${warn}" placeholder="Giá trị cảnh báo">
+                            </label>
+                            <label class="threshold-item critical">
+                                <span class="threshold-label">
+                                    <span class="color-dot" style="background: var(--kpi-bad)"></span>
+                                    Không đạt (Đỏ)
+                                </span>
+                                <input type="number" step="any" data-bind="${tabId}.${kpiKey}.critical" value="${critical}" placeholder="Giá trị không đạt">
+                            </label>
+                        </div>
+                        <div class="threshold-help">
+                            <i class="fas fa-info-circle"></i>
+                            <span>${higherIsBetter ? 'Giá trị cao hơn sẽ có màu tốt hơn' : 'Giá trị thấp hơn sẽ có màu tốt hơn'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += '</div></div>';
+    });
+
+    wrap.innerHTML = html;
+
+    // Initialize and bind scenario selector
+    const scenSel = document.getElementById('scenario-select');
+    if (scenSel) {
+        scenSel.value = CURRENT_SCENARIO;
+        scenSel.addEventListener('change', (e) => setScenario(e.target.value));
+    }
+
+    wrap.querySelectorAll('[data-bind]').forEach(el => {
+        el.addEventListener('change', (e) => {
+            const path = e.target.getAttribute('data-bind').split('.');
+            const tabId = path[0];
+            const kpiKey = path[1];
+            const field = path[2];
+            let val;
+            if (e.target.type === 'checkbox') val = !!e.target.checked;
+            else if (e.target.tagName === 'SELECT') val = e.target.value;
+            else val = Number(e.target.value);
+            KPI_LEVELS[tabId][kpiKey][field] = val;
+        });
+    });
+
+    const btnSave = document.getElementById('btn-save-kpi-levels');
+    if (btnSave && !btnSave.__bound) {
+        btnSave.addEventListener('click', () => {
+            saveKpiLevels(KPI_LEVELS);
+            showNotification('✅ Đã lưu cài đặt thành công!');
+            renderForState();
+            refreshChartsWithTargetLines();
+        });
+        btnSave.__bound = true;
+    }
+    const btnReset = document.getElementById('btn-reset-kpi-levels');
+    if (btnReset && !btnReset.__bound) {
+        btnReset.addEventListener('click', () => {
+            if (confirm('Bạn có chắc chắn muốn khôi phục tất cả cài đặt về mặc định không?')) {
+                KPI_LEVELS = structuredClone(DEFAULT_KPI_LEVELS);
+                saveKpiLevels(KPI_LEVELS);
+                renderKpiLevelsForm();
+                showNotification('🔄 Đã khôi phục cài đặt mặc định!');
+                renderForState();
+                refreshChartsWithTargetLines();
+            }
+        });
+        btnReset.__bound = true;
+    }
+}
+
+// ========== [Target Line Plugin] ==========
+// Vẽ 1 đường ngang tại giá trị `targetValue` trên thang y chỉ định.
+function targetLinePlugin(targetValue, yScaleId = 'y', color = '#e74c3c', label = 'Target') {
+    return {
+        id: 'targetLine-' + Math.random().toString(36).slice(2, 8), // id duy nhất mỗi lần tạo
+        afterDatasetsDraw(chart) {
+            if (typeof targetValue !== 'number') return;
+            const { ctx, chartArea, scales } = chart;
+            const yScale = scales[yScaleId];
+            if (!yScale) return; // trục không tồn tại
+
+            const y = yScale.getPixelForValue(targetValue);
+            if (!isFinite(y) || y < chartArea.top || y > chartArea.bottom) return;
+
+            ctx.save();
+
+            // Vẽ đường target chính với gradient
+            const gradient = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+            gradient.addColorStop(0, color + '40'); // 25% opacity ở đầu
+            gradient.addColorStop(0.5, color); // full opacity ở giữa
+            gradient.addColorStop(1, color + '40'); // 25% opacity ở cuối
+
+            // Vẽ background shadow
+            ctx.beginPath();
+            ctx.setLineDash([]);
+            ctx.moveTo(chartArea.left, y + 1);
+            ctx.lineTo(chartArea.right, y + 1);
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+            ctx.stroke();
+
+            // Vẽ đường chính
+            ctx.beginPath();
+            ctx.setLineDash([8, 4]); // dash pattern nổi bật hơn
+            ctx.moveTo(chartArea.left, y);
+            ctx.lineTo(chartArea.right, y);
+            ctx.lineWidth = 3; // tăng độ dày
+            ctx.strokeStyle = gradient;
+            ctx.stroke();
+
+            // Vẽ các điểm nhấn ở 2 đầu
+            ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.arc(chartArea.left + 5, y, 4, 0, 2 * Math.PI);
+            ctx.fillStyle = color;
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(chartArea.right - 5, y, 4, 0, 2 * Math.PI);
+            ctx.fillStyle = color;
+            ctx.fill();
+
+            // Vẽ nhãn với background
+            const text = `🎯 ${label}: ${formatValueByUnit(targetValue, inferUnitFromScale(yScaleId))}`;
+            ctx.font = 'bold 13px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+            const textMetrics = ctx.measureText(text);
+            const textWidth = textMetrics.width;
+            const textHeight = 16;
+            
+            // Tính toán vị trí label
+            const labelPadding = 8;
+            const labelX = chartArea.right - textWidth - labelPadding;
+            const labelY = Math.max(chartArea.top + textHeight + 8, Math.min(y - 8, chartArea.bottom - textHeight - 8));
+            
+            // Vẽ background cho label
+            ctx.fillStyle = color;
+            ctx.fillRect(labelX - 6, labelY - textHeight + 2, textWidth + 12, textHeight + 4);
+            
+            // Vẽ text
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(text, labelX, labelY);
+            
+            ctx.restore();
+
+            function inferUnitFromScale(scaleId) {
+                // Map scale ID to appropriate unit
+                if (yScaleId === 'y' && (label.includes('Doanh thu') || label.includes('Lợi nhuận'))) {
+                    return 'currency';
+                }
+                return 'number';
+            }
+        }
+    };
+}
+
+// ========== [Update Target Lines] ==========
+function updateChartTargetLines(chart, cfgs) {
+    // cfgs: mảng các { target, yScaleId, color, label }
+    if (!chart || !chart.config) return;
+    
+    const newPlugins = cfgs
+        .filter(c => typeof c.target === 'number')
+        .map(c => targetLinePlugin(c.target, c.yScaleId, c.color, c.label));
+
+    // Lọc bỏ plugin cũ có id bắt đầu bằng 'targetLine-'
+    chart.config.plugins = (chart.config.plugins || []).filter(p => !p.id || !String(p.id).startsWith('targetLine-'));
+    chart.config.plugins.push(...newPlugins);
+    chart.update();
+}
+
+function refreshChartsWithTargetLines() {
+    if (currentTab === 'overview' && revenueChart) {
+        const dept = getCurrentDepartment();
+        const lvRev = resolveKpiLevel('overview', 'revenue', dept, CURRENT_SCENARIO);
+        const lvPro = resolveKpiLevel('overview', 'profit', dept, CURRENT_SCENARIO);
+        const cfgs = [];
+        if (lvRev && typeof lvRev.target === 'number') {
+            cfgs.push({ target: lvRev.target, yScaleId: 'y', color: '#3b82f6', label: 'Doanh thu - Target' });
+        }
+        if (lvPro && typeof lvPro.target === 'number') {
+            cfgs.push({ target: lvPro.target, yScaleId: 'y1', color: '#10b981', label: 'Lợi nhuận - Target' });
+        }
+        updateChartTargetLines(revenueChart, cfgs);
+    }
+}
+
+// ========== [Chart Theme Sync] ==========
+function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+function syncChartTheme() {
+    if (!window.Chart) return;
+    const grid  = cssVar('--chart-grid') || '#e5e7eb';
+    const tick  = cssVar('--chart-tick') || '#64748b';
+    const bg    = cssVar('--chart-bg')   || '#ffffff';
+    const tbg   = cssVar('--chart-tooltip-bg') || 'rgba(15,23,42,.9)';
+    const ttext = cssVar('--chart-tooltip-text') || '#f8fafc';
+
+    // Defaults
+    Chart.defaults.color = tick;
+    Chart.defaults.borderColor = grid;
+    Chart.defaults.backgroundColor = bg;
+
+    // Tooltips
+    Chart.defaults.plugins.tooltip = Chart.defaults.plugins.tooltip || {};
+    Chart.defaults.plugins.tooltip.backgroundColor = tbg;
+    Chart.defaults.plugins.tooltip.titleColor = ttext;
+    Chart.defaults.plugins.tooltip.bodyColor = ttext;
+
+    // Update existing charts
+    if (revenueChart) revenueChart.update();
+    if (salesChannelChart) salesChannelChart.update();
+}
+
+// Utility: theme-aware chart colors (legacy compatibility)
 function getThemeColors() {
     const styles = getComputedStyle(document.body);
     const grid = styles.getPropertyValue('--gray-200').trim();
@@ -481,6 +1232,21 @@ function initializeCharts() {
     const revenueCanvas = document.getElementById('chart1Canvas');
     if (!revenueCanvas) return;
     const revenueCtx = revenueCanvas.getContext('2d');
+    
+    // Get target line plugins for overview charts
+    const plugins = [];
+    if (currentTab === 'overview') {
+        const dept = getCurrentDepartment();
+        const lvRev = resolveKpiLevel('overview', 'revenue', dept, CURRENT_SCENARIO);
+        const lvPro = resolveKpiLevel('overview', 'profit', dept, CURRENT_SCENARIO);
+        if (lvRev && typeof lvRev.target === 'number') {
+            plugins.push(targetLinePlugin(lvRev.target, 'y', '#3b82f6', 'Doanh thu - Target'));
+        }
+        if (lvPro && typeof lvPro.target === 'number') {
+            plugins.push(targetLinePlugin(lvPro.target, 'y1', '#10b981', 'Lợi nhuận - Target'));
+        }
+    }
+    
     revenueChart = new Chart(revenueCtx, {
         type: 'line',
         data: { labels: [], datasets: [] },
@@ -507,7 +1273,8 @@ function initializeCharts() {
                     y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false } }
                 }
             }
-        }
+        },
+        plugins: plugins
     });
 
     const salesCanvas = document.getElementById('chart2Canvas');
@@ -602,6 +1369,34 @@ function renderKPIValues(kpis) {
             : formatNumber(m.item.value);
         if (valueEl) valueEl.textContent = formatted;
         if (trendEl) trendEl.textContent = `${m.item.trend > 0 ? '+' : ''}${m.item.trend}%`;
+
+        // Apply KPI status colors for all tabs
+        if (valueEl) {
+            const cardEl = valueEl.closest('.kpi-card');
+            if (cardEl) {
+                // Map the KPI key based on the current tab and item properties
+                let statusKey = m.item.key;
+                
+                // Handle special mappings for different tabs
+                if (currentTab === 'overview') {
+                    if (m.item.key === 'support') statusKey = 'support';
+                } else if (currentTab === 'customers') {
+                    if (m.item.key === 'satisfaction') statusKey = 'satisfaction';
+                    if (m.item.key === 'support_tickets') statusKey = 'support_tickets';
+                }
+                
+                // Check if we have configuration for this KPI
+                const cfg = resolveKpiLevel(currentTab, statusKey, getCurrentDepartment(), CURRENT_SCENARIO);
+                if (cfg) {
+                    const status = getKpiStatus(currentTab, statusKey, m.item.value);
+                    cardEl.classList.remove('good','warn','bad');
+                    cardEl.classList.add(status);
+                    
+                    // Generate alert if KPI is in warn/bad status
+                    maybePushAlert(currentTab, statusKey, m.item.value);
+                }
+            }
+        }
     });
 }
 
@@ -788,9 +1583,30 @@ function toggleSectionsByTab() {
     const kpi = document.getElementById('kpiGrid');
     const charts = document.getElementById('chartsGrid');
     const table = document.getElementById('tableSection');
-    if (kpi) kpi.style.display = 'grid';
-    if (charts) charts.style.display = 'grid';
-    if (table) table.style.display = 'block';
+    const settings = document.getElementById('settings');
+    const alerts = document.getElementById('alerts');
+    
+    if (currentTab === 'settings') {
+        if (kpi) kpi.style.display = 'none';
+        if (charts) charts.style.display = 'none';
+        if (table) table.style.display = 'none';
+        if (settings) settings.style.display = 'block';
+        if (alerts) alerts.style.display = 'none';
+        renderKpiLevelsForm();
+    } else if (currentTab === 'alerts') {
+        if (kpi) kpi.style.display = 'none';
+        if (charts) charts.style.display = 'none';
+        if (table) table.style.display = 'none';
+        if (settings) settings.style.display = 'none';
+        if (alerts) alerts.style.display = 'block';
+        renderAlertsTab();
+    } else {
+        if (kpi) kpi.style.display = 'grid';
+        if (charts) charts.style.display = 'grid';
+        if (table) table.style.display = 'block';
+        if (settings) settings.style.display = 'none';
+        if (alerts) alerts.style.display = 'none';
+    }
 }
 
 function updateHeaderByTab(tab) {
@@ -913,6 +1729,9 @@ function renderForState() {
     renderChart1(view.chart1);
     renderChart2(view.chart2);
     renderTable(view.table);
+
+    // Ensure target lines are displayed after rendering
+    refreshChartsWithTargetLines();
 }
 
 function addDarkModeToggle() {
@@ -957,6 +1776,7 @@ function initializeDashboard() {
     const active = Array.from(navLinks).find(l => l.getAttribute('data-tab') === currentTab) || navLinks[0];
     if (active) active.classList.add('active');
 
+    initThemeToggle();
     initializeCharts();
     handleNavigation();
     handlePeriodChange();
@@ -989,9 +1809,34 @@ function handleResize() {
     }, 250);
 }
 
+// ========== [Accordion Functionality] ==========
+function initializeAccordions() {
+    document.querySelectorAll('.accordion .acc-head').forEach(head => {
+        head.addEventListener('click', function() {
+            const accordion = this.closest('.accordion');
+            const isOpen = accordion.classList.contains('open');
+            
+            // Toggle current accordion
+            accordion.classList.toggle('open', !isOpen);
+            
+            // Add smooth animation
+            const body = accordion.querySelector('.acc-body');
+            if (body) {
+                if (isOpen) {
+                    body.style.maxHeight = '0px';
+                    body.style.opacity = '0';
+                } else {
+                    body.style.maxHeight = body.scrollHeight + 'px';
+                    body.style.opacity = '1';
+                }
+            }
+        });
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initializeDashboard();
-    setTimeout(addDarkModeToggle, 100);
+    initializeAccordions();
 });
 window.addEventListener('load', logPerformance);
 window.addEventListener('resize', handleResize);
